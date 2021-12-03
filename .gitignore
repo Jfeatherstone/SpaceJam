@@ -1,0 +1,7 @@
+__pycache__/
+.ipynb_checkpoints/
+
+*.JPG
+*.avi
+*.gif
+*.mp4
