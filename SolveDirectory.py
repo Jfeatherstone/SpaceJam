@@ -59,10 +59,14 @@ horizontalMaskImage = './Masks/2022-02-28_HorizontalMask.bmp'
 correctionImage = rootFolder + 'calibration/2022-02-28_Calibration.bmp'
 g2CalibrationImage = rootFolder + 'calibration/2022-02-28_G2_Calibration.bmp'
 
-optimizationKwargs = {"maxEvals": [120, 100], "method": 'nelder',
+optimizationKwargs = {"maxEvals": [120, 200], "method": 'nelder',
                      "parametersToFit": [['f'], ['a']],
-                     "allowRemoveForces": True, "alphaTolerance": .15,
-                     "allowAddForces": True, "minForceThreshold": .02}
+                     "allowRemoveForces": False, "alphaTolerance": 1., "forceTolerance": 1.,
+                     "allowAddForces": False, "minForceThreshold": .03,
+                     "localizeAlphaOptimization": True}
+
+carryOverAlpha = False
+forceNoiseWidth = .1
 
 g2CalibrationCutoff = 1.2
 
@@ -72,13 +76,14 @@ g2CalibrationCutoff = 1.2
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Solve for forces on a directory of images.')
     parser.add_argument('dataset', type=str, help='The name of the directory containing image files.')
-
+    parser.add_argument('output_dir', type=str, help='The root output directory.', default='./')
     args = parser.parse_args()
 
     forceArr, alphaArr, betaArr, centerArr, radiusArr = forceSolve(rootFolder + args.dataset, guessRadius, fSigma, pxPerMeter,
                                                             brightfield, maskImage=maskImage, lightCorrectionImage=correctionImage,
                                                             lightCorrectionVerticalMask=verticalMaskImage,
-                                                            lightCorrectionHorizontalMask=horizontalMaskImage,
+                                                            lightCorrectionHorizontalMask=horizontalMaskImage, forceNoiseWidth=forceNoiseWidth,
                                                             g2CalibrationImage=g2CalibrationImage, g2CalibrationCutoffFactor=g2CalibrationCutoff,
-                                                            imageStartIndex=startIndex, imageEndIndex=endIndex,
-                                                            debug=False, optimizationKwargs=optimizationKwargs, saveMovie=True, pickleArrays=True)
+                                                            imageStartIndex=startIndex, imageEndIndex=endIndex, carryOverAlpha=carryOverAlpha,
+                                                            debug=False, optimizationKwargs=optimizationKwargs, saveMovie=True, pickleArrays=True,
+                                                            outputRootFolder=args.output_dir)
