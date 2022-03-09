@@ -61,14 +61,14 @@ g2CalibrationImage = rootFolder + 'calibration/2022-02-28_G2_Calibration.bmp'
 
 optimizationKwargs = {"maxEvals": [120, 200], "method": 'nelder',
                      "parametersToFit": [['f'], ['a']],
-                     "allowRemoveForces": False, "alphaTolerance": 1., "forceTolerance": 1.,
+                     "allowRemoveForces": False, "alphaTolerance": 2., "forceTolerance": 1.,
                      "allowAddForces": False, "minForceThreshold": .03,
                      "localizeAlphaOptimization": True}
 
-carryOverAlpha = False
+carryOverAlpha = True
 forceNoiseWidth = .1
 
-g2CalibrationCutoff = 1.2
+g2CalibrationCutoff = 1.5
 
 # End run parameters
 #############################
@@ -77,6 +77,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Solve for forces on a directory of images.')
     parser.add_argument('dataset', type=str, help='The name of the directory containing image files.')
     parser.add_argument('output_dir', type=str, help='The root output directory.', default='./')
+    parser.add_argument('-e', '--ext', default='', help='The extension of the output folder.')
+
     args = parser.parse_args()
 
     forceArr, alphaArr, betaArr, centerArr, radiusArr = forceSolve(rootFolder + args.dataset, guessRadius, fSigma, pxPerMeter,
@@ -86,4 +88,4 @@ if __name__ == '__main__':
                                                             g2CalibrationImage=g2CalibrationImage, g2CalibrationCutoffFactor=g2CalibrationCutoff,
                                                             imageStartIndex=startIndex, imageEndIndex=endIndex, carryOverAlpha=carryOverAlpha,
                                                             debug=False, optimizationKwargs=optimizationKwargs, saveMovie=True, pickleArrays=True,
-                                                            outputRootFolder=args.output_dir)
+                                                            outputRootFolder=args.output_dir, outputExtension=args.ext)
