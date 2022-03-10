@@ -52,14 +52,14 @@ g2MaskPadding = 2
 contactMaskRadius = 40
 brightfield = False
 
-maskImage = './Masks/2022-02-28_FullMask.bmp'
-verticalMaskImage = './Masks/2022-02-28_VerticalMask.bmp'
-horizontalMaskImage = './Masks/2022-02-28_HorizontalMask.bmp'
+maskImage = './Masks/2022-03-09_FullMask.bmp'
+verticalMaskImage = './Masks/2022-03-09_VerticalMask.bmp'
+horizontalMaskImage = './Masks/2022-03-09_HorizontalMask.bmp'
 
-correctionImage = rootFolder + 'calibration/2022-02-28_Calibration.bmp'
-g2CalibrationImage = rootFolder + 'calibration/2022-02-28_G2_Calibration.bmp'
+correctionImage = rootFolder + 'calibration/2022-03-09_Calibration.bmp'
+g2CalibrationImage = rootFolder + 'calibration/2022-03-09_G2_Calibration.bmp'
 
-optimizationKwargs = {"maxEvals": [120, 200], "method": 'nelder',
+optimizationKwargs = {"maxEvals": [150, 200], "method": 'nelder',
                      "parametersToFit": [['f'], ['a']],
                      "allowRemoveForces": False, "alphaTolerance": 2., "forceTolerance": 1.,
                      "allowAddForces": False, "minForceThreshold": .03,

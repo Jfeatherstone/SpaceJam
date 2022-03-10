@@ -116,10 +116,10 @@ AccelStepper steppers[2] = {rStepper, lStepper};
 // Set the initial value of the stepper to be 0, but this will be calibrated later
 int stepperPosition[2] = {0, 0};
 int stepperSpeed = 10; // Default speed is 5 mm/s
-int stepperMaxSpeed = 120;
+int stepperMaxSpeed = 150;
 
 // Parameters used when the positions of the steppers are reset
-int stepperResetSpeed = 80;
+int stepperResetSpeed = 150;
 int stepperResetPosition = 800;
 
 // The amount to change the speed each button press
@@ -145,6 +145,10 @@ const int LEFT_RESET_BUTTON_GND = 24;
 const int LEFT_RESET_BUTTON = 25;
 const int RESET_BUTTONS[2] = {RIGHT_RESET_BUTTON, LEFT_RESET_BUTTON};
 
+// If this pin is connected to ground, the reset routine
+// will be skipped.
+const int SKIP_ACTUATOR_RESET_SHORT = 32;
+
 // Where the LCD screen buttons can be read in;
 // see getLCDKey()
 const int LCD_ANALOG_BUTTON = 0;
@@ -165,6 +169,8 @@ void setup() {
   //digitalWrite(LEFT_RESET_BUTTON_GND, LOW);
   pinMode(RIGHT_RESET_BUTTON, INPUT_PULLUP);
   pinMode(LEFT_RESET_BUTTON, INPUT_PULLUP);
+
+  pinMode(SKIP_ACTUATOR_RESET_SHORT, INPUT_PULLUP);
   
   // Setup the LCD screen
   lcd.init();
@@ -212,44 +218,50 @@ void setup() {
   steppers[1].setMaxSpeed(stepperMaxSpeed);
   steppers[1].setSpeed(stepperSpeed);
 
-  String labels[2] = {"Right", "Left"};
-  for (int i = 0; i < 2; i++) {
-    lcd.clear();
-    lcd.cursorTo(1, 0);
-    lcd.printIn("Actuator reset:");
-    lcd.cursorTo(2, 0);
-    lcdPrintStr(labels[i] + "...");
-
-    bool skipReset = false;
-    
-    // Move the actuators to start position
-    while (digitalRead(RESET_BUTTONS[i]) && !skipReset) {
-//      if (get_key(analogRead(LCD_ANALOG_BUTTON) == 5))
-//        skipReset = true;
-        
-      steppers[i].setSpeed(-stepperResetSpeed);
-      steppers[i].runSpeed();
-    }
-    steppers[i].setCurrentPosition(0);
-
-    // Move the actuator back a little bit
-    steppers[i].moveTo(stepperResetPosition);
-    while (steppers[i].distanceToGo() != 0 && !skipReset) {
-//      if (get_key(analogRead(LCD_ANALOG_BUTTON) == 5))
-//        skipReset = true;
-      steppers[i].setSpeed(stepperResetSpeed);
-      steppers[i].runSpeed();
-    }
+  // We can skip this process by connecting pin SKIP_ACTUATOR_RESET_SHORT
+  // to ground
+  if (digitalRead(SKIP_ACTUATOR_RESET_SHORT)) {
   
-    lcd.clear();
-    lcd.cursorTo(1, 0);
-    lcd.printIn("Actuator reset:");  delay(5000);
-    lcd.cursorTo(2, 0);
-    lcdPrintStr(labels[i] + "...done!");
-    delay(1000);
+    String labels[2] = {"Right", "Left"};
+    for (int i = 0; i < 2; i++) {
+      lcd.clear();
+      lcd.cursorTo(1, 0);
+      lcd.printIn("Actuator reset:");
+      lcd.cursorTo(2, 0);
+      lcdPrintStr(labels[i] + "...");
+  
+      bool skipReset = false;
+      
+      // Move the actuators to start position
+      while (digitalRead(RESET_BUTTONS[i]) && !skipReset) {
+  //      if (get_key(analogRead(LCD_ANALOG_BUTTON) == 5))
+  //        skipReset = true;
+          
+        steppers[i].setSpeed(-stepperResetSpeed);
+        steppers[i].runSpeed();
+      }
+      steppers[i].setCurrentPosition(0);
+  
+      // Move the actuator back a little bit
+      steppers[i].moveTo(stepperResetPosition);
+      while (steppers[i].distanceToGo() != 0 && !skipReset) {
+  //      if (get_key(analogRead(LCD_ANALOG_BUTTON) == 5))
+  //        skipReset = true;
+        steppers[i].setSpeed(stepperResetSpeed);
+        steppers[i].runSpeed();
+      }
+    
+      lcd.clear();
+      lcd.cursorTo(1, 0);
+      lcd.printIn("Actuator reset:");  delay(5000);
+      lcd.cursorTo(2, 0);
+      lcdPrintStr(labels[i] + "...done!");
+      delay(1000);
+  
+    }
 
   }
-
+  
   lcd.clear();
 
   Serial.println("Setup finished");
@@ -260,7 +272,7 @@ void loop() {
   DateTime now = rtc.now();
   char format[] = "YY-MM-DD-hh:mm:ss";
   String strDt = now.toString(format);
-  Serial.println(strDt);
+  //Serial.println(strDt);
 
   
   lcd.cursorTo(1, 0);
@@ -300,42 +312,107 @@ void loop() {
   } else
   // Right button
   if (button == 1) {
-    // When pressing left, we push the particles to the left, which actually means using the right stepper
+    // When pressing right, we push the particles to the right, which actually means using the left stepper
     runExperiment = true;
     stepperToUse = 1;
   }
 
   if (runExperiment) {
+
+    // Defined as a global var so it can be used later to check we are okay to write
+    foundLogFile = false;
+    
+    if (SD.begin(CHIP_SELECT)) {
+      // Only goes up to 100 since have 100 log files is already way too many
+      for (int i = 0; i < 100; i++) {
+        String logNum = String(i);
+        // Format the number properly
+        if (logNum.length() == 1)
+          logNum = "0" + logNum;
+
+        // Put it all together
+        // VERY IMPORTANT NOTE: this data shield has very strict rules about
+        // file names when writing to an SD card: all characters will appear
+        // in caps, and the name cannot be longer than 12 total characters
+        // (so 8 characters before the extension). The library/code will not
+        // give you an error if you violate these rules, but the file will just
+        // not be created.
+        logFileName = "LC_" + logNum + ".csv";
+
+        // Now check if this file already exists
+        if (!SD.exists(logFileName)) {
+          Serial.println(logFileName);
+          logFile = SD.open(logFileName, FILE_WRITE);
+          foundLogFile = true;
+          break;
+        }
+      }
+    }
+
+    if (!foundLogFile) {
+      Serial.println("SD card error; force data will not be recorded!");
+      lcd.clear();
+      lcd.cursorTo(1, 0);
+      lcd.printIn("Warning:");
+      lcd.cursorTo(2, 0);
+      lcd.printIn("SD card error");
+      delay(1000);
+    } else
+      Serial.println("Found log file");
+    
     lcd.clear();
     lcd.cursorTo(1, 0);
     lcd.printIn("Running...");
     lcd.cursorTo(2, 0);
     lcd.printIn("Extending");
 
-    //int photoCounter = 0;
-
-    logFile = SD.open("20211202Test.csv", FILE_WRITE);
-    
     steppers[stepperToUse].move(numStepsPerTrial);
+
+    int iterCount = 0;
+    long averageForceTempArr[4][forceMeasurementAverageResolution];
+    // Keep track of when the start time was
+    long startTime = millis();
+    long lastAverageTime = 0;
+    
     while (steppers[stepperToUse].distanceToGo() != 0) {
-      //if (photoCounter % 3 == 0) {
-      //  D90.shotNow();
-      //  delay(1000);
-      //}
+
+        // We don't want to take a force measurement every step, so we downsample a bit
+        averageForceTempArr[0][iterCount % forceMeasurementAverageResolution] = wsb0.measureForce();
+        averageForceTempArr[1][iterCount % forceMeasurementAverageResolution] = wsb1.measureForce();
+        averageForceTempArr[2][iterCount % forceMeasurementAverageResolution] = wsb2.measureForce();
+        averageForceTempArr[3][iterCount % forceMeasurementAverageResolution] = wsb3.measureForce();
+        
+        if (iterCount % forceMeasurementAverageResolution == 0 && iterCount > 0) {
+        
+          // Calculate the average time
+          long currentAverageTime =  (millis() - startTime) - ((millis() - startTime) - lastAverageTime) / 2;
+          long averages[4] = {average(averageForceTempArr[0], forceMeasurementAverageResolution), average(averageForceTempArr[1], forceMeasurementAverageResolution), average(averageForceTempArr[2], forceMeasurementAverageResolution), average(averageForceTempArr[3], forceMeasurementAverageResolution)};
+          // Write the time,force
+          Serial.println(String(float(currentAverageTime) / 1000.f) + ", " + String(averages[0]) + ", " + String(averages[1]) + ", " + String(averages[2]) + ", " + String(averages[3]));
+          if (foundLogFile) {
+            logFile.println(String(float(currentAverageTime) / 1000.f) + ", " + String(averages[0]) + ", " + String(averages[1]) + ", " + String(averages[2]) + ", " + String(averages[3]));
+          }
+          lastAverageTime = currentAverageTime;
+        }
+
       // TODO: record force data + other things
-      logFile.println(String(wsb0.measureForce()) + "," + String(wsb1.measureForce()) + "," + String(wsb2.measureForce()) + "," + String(wsb3.measureForce()));      
+
       steppers[stepperToUse].setSpeed(stepperSpeed);
       steppers[stepperToUse].runSpeed();
-      //photoCounter++;
+      
+      iterCount++;
     }
 
-    logFile.close();
+    if (foundLogFile) {
+      logFile.close();
+      Serial.println("Log file written and closed!");
+    }
     
     lcd.cursorTo(2, 0);
     lcd.printIn("Retracting");
     
     // Then move back
-    steppers[stepperToUse].moveTo(stepperResetPosition);
+    steppers[stepperToUse].move(-numStepsPerTrial);
     while (steppers[stepperToUse].distanceToGo() != 0) {
       steppers[stepperToUse].setSpeed(-stepperResetSpeed);
       steppers[stepperToUse].runSpeed();
