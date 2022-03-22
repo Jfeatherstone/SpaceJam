@@ -63,7 +63,7 @@ optimizationKwargs = {"maxEvals": [120, 100], "method": 'nelder',
                      "parametersToFit": [['f'], ['a']],
                      "allowRemoveForces": False, "alphaTolerance": 2., "forceTolerance": 1.,
                      "allowAddForces": False, "minForceThreshold": .03,
-                     "localizeAlphaOptimization": True}
+                      "localizeAlphaOptimization": True, "imageScaleFactor": 0.5}
 
 carryOverAlpha = True
 forceNoiseWidth = .1
