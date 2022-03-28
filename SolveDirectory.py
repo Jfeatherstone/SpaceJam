@@ -32,14 +32,14 @@ rootFolder = '/eno/jdfeathe/DATA/SpaceJam/'
 # We'll take the data set as a argument from the command line
 #dataSet = '2022-02-28_Wide'
 
-startIndex = None
+startIndex = 50
 endIndex = None
 
 # Our radius that we will be identifying particles with
 guessRadius = 160 # [px]
 
-# A particle is about 1cm across
-pxPerMeter = 2*guessRadius / .01
+# A particle is about 1.5cm across
+pxPerMeter = 2*guessRadius / .015
 # No idea what the actual value for this is
 fSigma = 140
 
@@ -56,19 +56,27 @@ maskImage = './Masks/2022-03-16_FullMask.bmp'
 verticalMaskImage = './Masks/2022-03-16_VerticalMask.bmp'
 horizontalMaskImage = './Masks/2022-03-16_HorizontalMask.bmp'
 
-correctionImage = rootFolder + 'calibration/2022-03-16_Calibration.bmp'
+#correctionImage = rootFolder + 'calibration/2022-03-16_Calibration.bmp'
+correctionImage = None
 g2CalibrationImage = rootFolder + 'calibration/2022-03-16_G2_Calibration.bmp'
 
-optimizationKwargs = {"maxEvals": [120, 100], "method": 'nelder',
+cropXBounds = [200, 1000]
+
+optimizationKwargs = {"maxEvals": [200,200], "method": 'leastsq',
                      "parametersToFit": [['f'], ['a']],
                      "allowRemoveForces": False, "alphaTolerance": 2., "forceTolerance": 1.,
                      "allowAddForces": False, "minForceThreshold": .03,
-                      "localizeAlphaOptimization": True, "imageScaleFactor": 0.5}
+                      "localizeAlphaOptimization": True, "imageScaleFactor": .5}
+
+circleTrackingKwargs = {"intensitySoftmax": 2., "intensitySoftmin": .2, "peakDownsample": 5,
+                        "offscreenParticles": False, "radiusTolerance": None, "negativeHalo": True,
+                        "fitPeaks": False}
 
 carryOverAlpha = True
 forceNoiseWidth = .1
+alphaNoiseWidth = .1
 
-g2CalibrationCutoff = 1.8
+g2CalibrationCutoff = 2.
 
 # End run parameters
 #############################
@@ -81,11 +89,14 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    forceArr, alphaArr, betaArr, centerArr, radiusArr = forceSolve(rootFolder + args.dataset, guessRadius, fSigma, pxPerMeter,
-                                                            brightfield, maskImage=maskImage, lightCorrectionImage=correctionImage,
-                                                            lightCorrectionVerticalMask=verticalMaskImage,
-                                                            lightCorrectionHorizontalMask=horizontalMaskImage, forceNoiseWidth=forceNoiseWidth,
-                                                            g2CalibrationImage=g2CalibrationImage, g2CalibrationCutoffFactor=g2CalibrationCutoff,
-                                                            imageStartIndex=startIndex, imageEndIndex=endIndex, carryOverAlpha=carryOverAlpha,
-                                                            debug=False, optimizationKwargs=optimizationKwargs, saveMovie=True, pickleArrays=True,
-                                                            outputRootFolder=args.output_dir, outputExtension=args.ext)
+    for i in range(5):
+
+        forceArr, alphaArr, betaArr, centerArr, radiusArr = forceSolve(rootFolder + args.dataset, guessRadius, fSigma, pxPerMeter,
+                                                                brightfield, maskImage=maskImage, cropXBounds=cropXBounds,
+                                                                lightCorrectionImage=correctionImage,
+                                                                lightCorrectionVerticalMask=verticalMaskImage, alphaNoiseWidth=alphaNoiseWidth,
+                                                                lightCorrectionHorizontalMask=horizontalMaskImage, forceNoiseWidth=forceNoiseWidth,
+                                                                g2CalibrationImage=g2CalibrationImage, g2CalibrationCutoffFactor=g2CalibrationCutoff,
+                                                                imageStartIndex=startIndex, imageEndIndex=endIndex, carryOverAlpha=carryOverAlpha,
+                                                                debug=False, optimizationKwargs=optimizationKwargs, saveMovie=True, pickleArrays=True,
+                                                                outputRootFolder=args.output_dir, outputExtension=args.ext + f'_{i}')
