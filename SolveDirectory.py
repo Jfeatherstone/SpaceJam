@@ -60,15 +60,15 @@ horizontalMaskImage = './Masks/2022-03-16_HorizontalMask.bmp'
 correctionImage = None
 g2CalibrationImage = rootFolder + 'calibration/2022-03-16_G2_Calibration.bmp'
 
-cropXBounds = [200, 1000]
+cropXBounds = [200, 1200]
 
 optimizationKwargs = {"maxEvals": [200,200], "method": 'leastsq',
                      "parametersToFit": [['f'], ['a']],
-                     "allowRemoveForces": False, "alphaTolerance": 2., "forceTolerance": 1.,
+                     "allowRemoveForces": False, "alphaTolerance": .6, "forceTolerance": 1.,
                      "allowAddForces": False, "minForceThreshold": .03,
-                      "localizeAlphaOptimization": True, "imageScaleFactor": .5}
+                      "localizeAlphaOptimization": False, "imageScaleFactor": 1}
 
-circleTrackingKwargs = {"intensitySoftmax": 2., "intensitySoftmin": .2, "peakDownsample": 5,
+circleTrackingKwargs = {"intensitySoftmax": 2., "intensitySoftmin": 1.8, "peakDownsample": 5,
                         "offscreenParticles": False, "radiusTolerance": None, "negativeHalo": True,
                         "fitPeaks": False}
 
@@ -89,7 +89,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    for i in range(5):
+    for i in range(2):
 
         forceArr, alphaArr, betaArr, centerArr, radiusArr = forceSolve(rootFolder + args.dataset, guessRadius, fSigma, pxPerMeter,
                                                                 brightfield, maskImage=maskImage, cropXBounds=cropXBounds,
