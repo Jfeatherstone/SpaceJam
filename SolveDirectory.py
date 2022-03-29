@@ -56,17 +56,17 @@ maskImage = './Masks/2022-03-16_FullMask.bmp'
 verticalMaskImage = './Masks/2022-03-16_VerticalMask.bmp'
 horizontalMaskImage = './Masks/2022-03-16_HorizontalMask.bmp'
 
-#correctionImage = rootFolder + 'calibration/2022-03-16_Calibration.bmp'
-correctionImage = None
+correctionImage = rootFolder + 'calibration/2022-03-16_Calibration.bmp'
+#correctionImage = None
 g2CalibrationImage = rootFolder + 'calibration/2022-03-16_G2_Calibration.bmp'
 
 cropXBounds = [200, 1200]
 
-optimizationKwargs = {"maxEvals": [200,200], "method": 'leastsq',
+optimizationKwargs = {"maxEvals": [200,200], "method": 'nelder',
                      "parametersToFit": [['f'], ['a']],
                      "allowRemoveForces": False, "alphaTolerance": .6, "forceTolerance": 1.,
                      "allowAddForces": False, "minForceThreshold": .03,
-                      "localizeAlphaOptimization": False, "imageScaleFactor": 1}
+                      "localizeAlphaOptimization": True, "imageScaleFactor": 1}
 
 circleTrackingKwargs = {"intensitySoftmax": 2., "intensitySoftmin": 1.8, "peakDownsample": 5,
                         "offscreenParticles": False, "radiusTolerance": None, "negativeHalo": True,
