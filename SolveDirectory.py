@@ -84,7 +84,7 @@ g2CalibrationCutoff = 2.
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Solve for forces on a directory of images.')
     parser.add_argument('dataset', type=str, help='The name of the directory containing image files.')
-    parser.add_argument('output_dir', type=str, help='The root output directory.', default='./')
+    parser.add_argument('-d', type=str, help='The root output directory.', default='./')
     parser.add_argument('-e', '--ext', default='', help='The extension of the output folder.')
 
     args = parser.parse_args()
@@ -93,10 +93,12 @@ if __name__ == '__main__':
 
         forceArr, alphaArr, betaArr, centerArr, radiusArr = forceSolve(rootFolder + args.dataset, guessRadius, fSigma, pxPerMeter,
                                                                 brightfield, maskImage=maskImage, cropXBounds=cropXBounds,
-                                                                lightCorrectionImage=correctionImage,
+                                                                lightCorrectionImage=correctionImage, peBlurKernel=blurKernel,
+                                                                contactPadding=contactPadding, g2MaskRadius=g2MaskRadius, contactMaskRadius=contactMaskRadius,
                                                                 lightCorrectionVerticalMask=verticalMaskImage, alphaNoiseWidth=alphaNoiseWidth,
                                                                 lightCorrectionHorizontalMask=horizontalMaskImage, forceNoiseWidth=forceNoiseWidth,
                                                                 g2CalibrationImage=g2CalibrationImage, g2CalibrationCutoffFactor=g2CalibrationCutoff,
                                                                 imageStartIndex=startIndex, imageEndIndex=endIndex, carryOverAlpha=carryOverAlpha,
-                                                                debug=False, optimizationKwargs=optimizationKwargs, saveMovie=True, pickleArrays=True,
-                                                                outputRootFolder=args.output_dir, outputExtension=args.ext + f'_{i}')
+                                                                debug=False, optimizationKwargs=optimizationKwargs, circleTrackingKwargs=circleTrackingKwargs,
+                                                                saveMovie=True, pickleArrays=True,
+                                                                outputRootFolder=args.d, outputExtension=args.ext + f'_{i}')
