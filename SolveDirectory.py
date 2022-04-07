@@ -32,8 +32,8 @@ rootFolder = '/eno/jdfeathe/DATA/SpaceJam/'
 # We'll take the data set as a argument from the command line
 #dataSet = '2022-02-28_Wide'
 
-startIndex = 50
-endIndex = None
+startIndex = None
+endIndex = 350
 
 # Our radius that we will be identifying particles with
 guessRadius = 160 # [px]
@@ -52,29 +52,22 @@ g2MaskPadding = 2
 contactMaskRadius = 40
 brightfield = False
 
-maskImage = './Masks/2022-03-16_FullMask.bmp'
-verticalMaskImage = './Masks/2022-03-16_VerticalMask.bmp'
-horizontalMaskImage = './Masks/2022-03-16_HorizontalMask.bmp'
-
-correctionImage = rootFolder + 'calibration/2022-03-16_Calibration.bmp'
-#correctionImage = None
-g2CalibrationImage = rootFolder + 'calibration/2022-03-16_G2_Calibration.bmp'
-
 cropXBounds = [200, 1200]
 
-optimizationKwargs = {"maxEvals": [200,200], "method": 'nelder',
-                     "parametersToFit": [['f'], ['a']],
-                     "allowRemoveForces": False, "alphaTolerance": .6, "forceTolerance": 1.,
-                     "allowAddForces": False, "minForceThreshold": .03,
-                      "localizeAlphaOptimization": True, "imageScaleFactor": 1}
+optimizationKwargs = {"maxEvals": [100, 150, 100], "method": 'nelder',
+                       "parametersToFit": [['f'], ['f', 'a'], ['a']],
+                       "allowRemoveForces": False, "useTolerance": False,
+                       "allowAddForces": True, "minForceThreshold": .02,
+                      "localizeAlphaOptimization": False, "imageScaleFactor": 1}
+
 
 circleTrackingKwargs = {"intensitySoftmax": 2., "intensitySoftmin": 1.8, "peakDownsample": 5,
                         "offscreenParticles": False, "radiusTolerance": None, "negativeHalo": True,
-                        "fitPeaks": False}
+                        "fitPeaks": False, "allowOverlap": True}
 
 carryOverAlpha = True
-forceNoiseWidth = .1
-alphaNoiseWidth = .1
+forceNoiseWidth = .05
+alphaNoiseWidth = .05
 
 g2CalibrationCutoff = 2.
 
@@ -86,15 +79,27 @@ if __name__ == '__main__':
     parser.add_argument('dataset', type=str, help='The name of the directory containing image files.')
     parser.add_argument('-d', type=str, help='The root output directory.', default='./')
     parser.add_argument('-e', '--ext', default='', help='The extension of the output folder.')
+    parser.add_argument('-r', '--repeat', type=int, default=1, help='The number of times to repeat the solving.')
+    parser.add_argument('-i', '--input_settings', type=str, help='Path to input settings file.', default=None)
 
     args = parser.parse_args()
 
-    for i in range(2):
+    dateStr = args.dataset.split('_')[0]
 
-        forceArr, alphaArr, betaArr, centerArr, radiusArr = forceSolve(rootFolder + args.dataset, guessRadius, fSigma, pxPerMeter,
-                                                                brightfield, maskImage=maskImage, cropXBounds=cropXBounds,
+    maskImage = f'./Masks/{dateStr}_FullMask.bmp'
+    verticalMaskImage = f'./Masks/{dateStr}_VerticalMask.bmp'
+    horizontalMaskImage = f'./Masks/{dateStr}_HorizontalMask.bmp'
+
+    correctionImage = rootFolder + f'calibration/{dateStr}_Calibration.bmp'
+    g2CalibrationImage = rootFolder + f'calibration/{dateStr}_G2_Calibration.bmp'
+
+    for i in range(args.repeat):
+
+        if args.input_settings is None:
+            forceArr, alphaArr, betaArr, centerArr, radiusArr = forceSolve(rootFolder + args.dataset, guessRadius, fSigma, pxPerMeter,
+                                                                brightfield, maskImage=maskImage, cropXMin=cropXBounds[0], cropXMax=cropXBounds[1],
                                                                 lightCorrectionImage=correctionImage, peBlurKernel=blurKernel,
-                                                                contactPadding=contactPadding, g2MaskRadius=g2MaskRadius, contactMaskRadius=contactMaskRadius,
+                                                                contactPadding=contactPadding, g2MaskPadding=g2MaskPadding, contactMaskRadius=contactMaskRadius,
                                                                 lightCorrectionVerticalMask=verticalMaskImage, alphaNoiseWidth=alphaNoiseWidth,
                                                                 lightCorrectionHorizontalMask=horizontalMaskImage, forceNoiseWidth=forceNoiseWidth,
                                                                 g2CalibrationImage=g2CalibrationImage, g2CalibrationCutoffFactor=g2CalibrationCutoff,
@@ -102,3 +107,12 @@ if __name__ == '__main__':
                                                                 debug=False, optimizationKwargs=optimizationKwargs, circleTrackingKwargs=circleTrackingKwargs,
                                                                 saveMovie=True, pickleArrays=True,
                                                                 outputRootFolder=args.d, outputExtension=args.ext + f'_{i}')
+
+        else:
+            forceArr, alphaArr, betaArr, centerArr, radiusArr = forceSolve(rootFolder + args.dataset, inputSettingsFile=args.input_settings,
+                                                                maskImage=maskImage, g2CalibrationImage=g2CalibrationImage,
+                                                                lightCorrectionImage=correctionImage,
+                                                                lightCorrectionVerticalMask=verticalMaskImage,
+                                                                lightCorrectionHorizontalMask=horizontalMaskImage,
+                                                                outputExtension=args.ext + f'_{i}')
+        print('')
