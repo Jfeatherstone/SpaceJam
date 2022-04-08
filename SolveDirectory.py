@@ -86,9 +86,9 @@ if __name__ == '__main__':
 
     dateStr = args.dataset.split('_')[0]
 
-    maskImage = f'./Masks/{dateStr}_FullMask.bmp'
-    verticalMaskImage = f'./Masks/{dateStr}_VerticalMask.bmp'
-    horizontalMaskImage = f'./Masks/{dateStr}_HorizontalMask.bmp'
+    maskImage = f'./masks/{dateStr}_FullMask.bmp'
+    verticalMaskImage = f'./masks/{dateStr}_VerticalMask.bmp'
+    horizontalMaskImage = f'./masks/{dateStr}_HorizontalMask.bmp'
 
     correctionImage = rootFolder + f'calibration/{dateStr}_Calibration.bmp'
     g2CalibrationImage = rootFolder + f'calibration/{dateStr}_G2_Calibration.bmp'
