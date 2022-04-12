@@ -58,7 +58,7 @@ optimizationKwargs = {"maxEvals": [100, 150, 100], "method": 'nelder',
                        "parametersToFit": [['f'], ['f', 'a'], ['a']],
                        "allowRemoveForces": False, "useTolerance": False,
                        "allowAddForces": True, "minForceThreshold": .02,
-                      "localizeAlphaOptimization": False, "imageScaleFactor": 1}
+                      "localizeAlphaOptimization": False, "imageScaleFactor": .25}
 
 
 circleTrackingKwargs = {"intensitySoftmax": 2., "intensitySoftmin": 1.8, "peakDownsample": 5,
