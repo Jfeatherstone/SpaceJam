@@ -32,8 +32,8 @@ rootFolder = '/eno/jdfeathe/DATA/SpaceJam/'
 # We'll take the data set as a argument from the command line
 #dataSet = '2022-02-28_Wide'
 
-startIndex = None
-endIndex = 350
+startIndex = 40
+endIndex = 400
 
 # Our radius that we will be identifying particles with
 guessRadius = 160 # [px]
@@ -58,7 +58,7 @@ optimizationKwargs = {"maxEvals": [100, 150, 100], "method": 'nelder',
                        "parametersToFit": [['f'], ['f', 'a'], ['a']],
                        "allowRemoveForces": False, "useTolerance": False,
                        "allowAddForces": True, "minForceThreshold": .02,
-                      "localizeAlphaOptimization": False, "imageScaleFactor": .25}
+                      "localizeAlphaOptimization": False, "imageScaleFactor": .5}
 
 
 circleTrackingKwargs = {"intensitySoftmax": 2., "intensitySoftmin": 1.8, "peakDownsample": 5,
@@ -66,8 +66,8 @@ circleTrackingKwargs = {"intensitySoftmax": 2., "intensitySoftmin": 1.8, "peakDo
                         "fitPeaks": False, "allowOverlap": True}
 
 carryOverAlpha = True
-forceNoiseWidth = .05
-alphaNoiseWidth = .05
+forceNoiseWidth = .07
+alphaNoiseWidth = .07
 
 g2CalibrationCutoff = 2.
 
@@ -96,7 +96,7 @@ if __name__ == '__main__':
     for i in range(args.repeat):
 
         if args.input_settings is None:
-            forceArr, alphaArr, betaArr, centerArr, radiusArr = forceSolve(rootFolder + args.dataset, guessRadius, fSigma, pxPerMeter,
+            forceArr, alphaArr, betaArr, centerArr, radiusArr, angleArr = forceSolve(rootFolder + args.dataset, guessRadius, fSigma, pxPerMeter,
                                                                 brightfield, maskImage=maskImage, cropXMin=cropXBounds[0], cropXMax=cropXBounds[1],
                                                                 lightCorrectionImage=correctionImage, peBlurKernel=blurKernel,
                                                                 contactPadding=contactPadding, g2MaskPadding=g2MaskPadding, contactMaskRadius=contactMaskRadius,
@@ -109,7 +109,7 @@ if __name__ == '__main__':
                                                                 outputRootFolder=args.d, outputExtension=args.ext + f'_{i}')
 
         else:
-            forceArr, alphaArr, betaArr, centerArr, radiusArr = forceSolve(rootFolder + args.dataset, inputSettingsFile=args.input_settings,
+            forceArr, alphaArr, betaArr, centerArr, radiusArr, angleArr = forceSolve(rootFolder + args.dataset, inputSettingsFile=args.input_settings,
                                                                 maskImage=maskImage, g2CalibrationImage=g2CalibrationImage,
                                                                 lightCorrectionImage=correctionImage,
                                                                 lightCorrectionVerticalMask=verticalMaskImage,
