@@ -54,10 +54,10 @@ brightfield = False
 
 cropXBounds = [200, 1200]
 
-optimizationKwargs = {"maxEvals": [75, 125, 75], "method": 'nelder',
+optimizationKwargs = {"maxEvals": [100, 150, 100], "method": 'nelder',
                        "parametersToFit": [['f'], ['f', 'a'], ['a']],
-                       "allowRemoveForces": False, "useTolerance": False,
-                       "allowAddForces": False, "minForceThreshold": .02,
+                       "allowRemoveForces": True, "useTolerance": False,
+                       "allowAddForces": True, "minForceThreshold": .02,
                       "localizeAlphaOptimization": False, "imageScaleFactor": .5}
 
 
@@ -70,8 +70,6 @@ forceNoiseWidth = .07
 alphaNoiseWidth = .07
 
 g2CalibrationCutoff = 2.
-
-forceBalanceWeighting = 1.
 
 # End run parameters
 #############################
@@ -95,7 +93,9 @@ if __name__ == '__main__':
     correctionImage = rootFolder + f'calibration/{dateStr}_Calibration.bmp'
     g2CalibrationImage = rootFolder + f'calibration/{dateStr}_G2_Calibration.bmp'
 
-    for i in range(args.repeat):
+    forceBalanceFactorArr = [2, 3, 4, 8, 12, 16, 20]
+
+    for i in range(len(forceBalanceFactorArr)):
 
         if args.input_settings is None:
             forceArr, alphaArr, betaArr, centerArr, radiusArr, angleArr = forceSolve(rootFolder + args.dataset, guessRadius, fSigma, pxPerMeter,
@@ -107,14 +107,6 @@ if __name__ == '__main__':
                                                                 g2CalibrationImage=g2CalibrationImage, g2CalibrationCutoffFactor=g2CalibrationCutoff,
                                                                 imageStartIndex=startIndex, imageEndIndex=endIndex, carryOverAlpha=carryOverAlpha,
                                                                 debug=False, optimizationKwargs=optimizationKwargs, circleTrackingKwargs=circleTrackingKwargs,
-                                                                saveMovie=True, pickleArrays=True, forceBalanceWeighting=forceBalanceWeighting,
-                                                                outputRootFolder=args.d, outputExtension=args.ext + f'_{i}')
-
-        else:
-            forceArr, alphaArr, betaArr, centerArr, radiusArr, angleArr = forceSolve(rootFolder + args.dataset, inputSettingsFile=args.input_settings,
-                                                                maskImage=maskImage, g2CalibrationImage=g2CalibrationImage,
-                                                                lightCorrectionImage=correctionImage,
-                                                                lightCorrectionVerticalMask=verticalMaskImage,
-                                                                lightCorrectionHorizontalMask=horizontalMaskImage,
-                                                                outputExtension=args.ext + f'_{i}')
-        print('')
+                                                                saveMovie=True, pickleArrays=True, forceBalanceWeighting=1/forceBalanceFactorArr[i],
+                                                                outputRootFolder=args.d, outputExtension=args.ext + f'_1to{forceBalanceFactorArr[i]}_FBW')
+            print('')
